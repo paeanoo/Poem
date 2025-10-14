@@ -1,0 +1,395 @@
+<script lang="ts" setup>
+import { ref } from 'vue';
+
+// Hot Poems Data
+const hotPoems = ref([
+  {
+    title: "静夜思",
+    author: "李白",
+    dynasty: "唐代",
+    excerpt: "床前明月光，疑是地上霜。举头望明月，低头思故乡。",
+    image: "https://ai-public.mastergo.com/ai/img_res/8677cddd3f0c7f7a0d32c3dee650cb8d.jpg"
+  },
+  {
+    title: "春晓",
+    author: "孟浩然",
+    dynasty: "唐代",
+    excerpt: "春眠不觉晓，处处闻啼鸟。夜来风雨声，花落知多少。",
+    image: "https://ai-public.mastergo.com/ai/img_res/6b6e61661d2253c75c313cc63c5b76cf.jpg"
+  },
+  {
+    title: "水调歌头",
+    author: "苏轼",
+    dynasty: "宋代",
+    excerpt: "明月几时有？把酒问青天。不知天上宫阙，今夕是何年。",
+    image: "https://ai-public.mastergo.com/ai/img_res/0c11e79fb281ece1012244495299476e.jpg"
+  }
+]);
+
+// Categories Data
+const categories = ref([
+  {
+    name: "唐诗",
+    image: "https://ai-public.mastergo.com/ai/img_res/d34749196cfc2826de5f2f07fe2cb79a.jpg"
+  },
+  {
+    name: "宋词",
+    image: "https://ai-public.mastergo.com/ai/img_res/4523c49c729013fd127bd26518ad4940.jpg"
+  },
+  {
+    name: "元曲",
+    image: "https://ai-public.mastergo.com/ai/img_res/a0587ab694073b7efa3ca42a84bc6133.jpg"
+  },
+  {
+    name: "古风",
+    image: "https://ai-public.mastergo.com/ai/img_res/e06e1a514aa99a59c067b573be0237ba.jpg"
+  },
+  {
+    name: "现代诗",
+    image: "https://ai-public.mastergo.com/ai/img_res/d886ed86ef20e7d32f9a84d95b0aa952.jpg"
+  }
+]);
+
+// Famous Poets Data
+const famousPoets = ref([
+  {
+    name: "李白",
+    dynasty: "唐代",
+    bio: "字太白，号青莲居士，唐代伟大的浪漫主义诗人，被后人誉为'诗仙'。",
+    avatar: "https://ai-public.mastergo.com/ai/img_res/2bf8404ae3e124e607b9bdd4774dde56.jpg",
+    works: ["将进酒", "蜀道难", "早发白帝城"]
+  },
+  {
+    name: "杜甫",
+    dynasty: "唐代",
+    bio: "字子美，自号少陵野老，唐代伟大的现实主义诗人，被后人称为'诗圣'。",
+    avatar: "https://ai-public.mastergo.com/ai/img_res/f6eaa94ef2e2ea4f27a2a85b42fc3b47.jpg",
+    works: ["春望", "茅屋为秋风所破歌", "登高"]
+  },
+  {
+    name: "苏轼",
+    dynasty: "宋代",
+    bio: "字子瞻，号东坡居士，北宋著名文学家、书画家，豪放派词人代表。",
+    avatar: "https://ai-public.mastergo.com/ai/img_res/3f491984791c93011fd152fa6d94e28f.jpg",
+    works: ["念奴娇·赤壁怀古", "水调歌头·明月几时有", "江城子·密州出猎"]
+  }
+]);
+
+// Community Posts Data
+const communityPosts = ref([
+  {
+    author: "墨香书生",
+    time: "2小时前",
+    content: "新作《秋思》：枫叶飘零满径黄，西风瑟瑟透心凉。思君不见君何处，唯有明月照空床。",
+    avatar: "https://ai-public.mastergo.com/ai/img_res/0c4b445fafc506c9ee9035859ae21770.jpg",
+    likes: 24,
+    comments: 8
+  },
+  {
+    author: "诗韵雅音",
+    time: "5小时前",
+    content: "读李白《将进酒》有感：人生得意须尽欢，莫使金樽空对月。古来圣贤皆寂寞，惟有饮者留其名。",
+    avatar: "https://ai-public.mastergo.com/ai/img_res/29305598ac33dabe6421504efeeda494.jpg",
+    likes: 42,
+    comments: 15
+  },
+  {
+    author: "山水清音",
+    time: "1天前",
+    content: "原创《山居吟》：青山如黛水如琴，白鹭翩翩入翠林。最爱夕阳西下处，炊烟袅袅绕山村。",
+    avatar: "https://ai-public.mastergo.com/ai/img_res/fc1b7064e6e7e935e08d46f04826eb29.jpg",
+    likes: 67,
+    comments: 23
+  }
+]);
+
+// Discussion Topics Data
+const discussionTopics = ref([
+  {
+    title: "如何理解'诗中有画，画中有诗'？",
+    excerpt: "王维的诗作常被人评价为'诗中有画'，这种艺术境界是如何实现的？",
+    replies: 32,
+    lastReply: "1小时前"
+  },
+  {
+    title: "宋词中的婉约派与豪放派各有什么特色？",
+    excerpt: "以李清照和苏轼为例，探讨婉约派与豪放派在风格和表现手法上的差异。",
+    replies: 45,
+    lastReply: "3小时前"
+  },
+  {
+    title: "现代诗歌如何传承古典诗词的意境？",
+    excerpt: "当代诗人在创作中如何汲取古典诗词的营养，又如何体现时代特色？",
+    replies: 28,
+    lastReply: "昨天"
+  }
+]);
+</script>
+
+<template>
+  <div class="min-h-screen bg-gray-50">
+    <!-- Navigation Bar -->
+    <nav class="bg-gray-900 text-white py-4 px-8 flex items-center justify-between shadow-md">
+      <div class="flex items-center space-x-10">
+        <h1 class="text-2xl font-bold">诗韵赏析</h1>
+        <div class="flex space-x-6">
+          <a href="#" class="hover:text-amber-400 transition-colors">首页</a>
+          <a href="#" class="hover:text-amber-400 transition-colors">诗词分类</a>
+          <a href="#" class="hover:text-amber-400 transition-colors">名家推荐</a>
+          <a href="#" class="hover:text-amber-400 transition-colors">我的收藏</a>
+          <a href="#" class="hover:text-amber-400 transition-colors">个人中心</a>
+        </div>
+      </div>
+      <div class="flex items-center space-x-4">
+        <div class="relative">
+          <input
+            type="text"
+            placeholder="搜索诗词、作者..."
+            class="bg-gray-800 text-white rounded-full py-2 px-4 pl-10 focus:outline-none focus:ring-2 focus:ring-amber-500 w-64"
+          />
+          <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+        </div>
+        <div class="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center cursor-pointer">
+          <i class="fas fa-user text-xl"></i>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Hero Banner -->
+    <section class="relative h-[500px] overflow-hidden">
+      <div class="absolute inset-0 bg-gradient-to-r from-black/70 to-transparent z-10"></div>
+      <img
+        src="https://ai-public.mastergo.com/ai/img_res/aac3852c2ae0b54c6ca5e72627929389.jpg"
+        alt="Hero Banner"
+        class="w-full h-full object-cover object-center"
+      />
+      <div class="absolute inset-0 z-20 flex items-center pl-20">
+        <div class="max-w-2xl text-white">
+          <h2 class="text-5xl font-bold mb-4">品读千年诗词之美</h2>
+          <p class="text-xl mb-8 leading-relaxed">
+            在这里，您可以欣赏到从唐诗宋词到现代诗歌的精华之作，感受中华文化的深厚底蕴与无穷魅力。
+          </p>
+          <button class="!rounded-button whitespace-nowrap bg-amber-600 hover:bg-amber-700 text-white py-3 px-8 text-lg font-medium transition-colors">
+            开始探索
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Hot Poetry Recommendations -->
+    <section class="py-16 px-8">
+      <div class="max-w-7xl mx-auto">
+        <h2 class="text-3xl font-bold mb-10 text-center">热门诗词推荐</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div
+            v-for="(poem, index) in hotPoems"
+            :key="index"
+            class="bg-white rounded-xl shadow-lg overflow-hidden transition-transform hover:scale-105"
+          >
+            <img
+              :src="poem.image"
+              :alt="poem.title"
+              class="w-full h-48 object-cover"
+            />
+            <div class="p-6">
+              <div class="flex justify-between items-start mb-3">
+                <h3 class="text-xl font-bold">{{ poem.title }}</h3>
+                <button class="text-amber-600 hover:text-amber-700">
+                  <i class="fas fa-heart"></i>
+                </button>
+              </div>
+              <p class="text-gray-600 mb-2">{{ poem.author }} · {{ poem.dynasty }}</p>
+              <p class="text-gray-700 line-clamp-3">{{ poem.excerpt }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Poetry Categories -->
+    <section class="py-12 bg-gray-100">
+      <div class="max-w-7xl mx-auto px-8">
+        <h2 class="text-3xl font-bold mb-8 text-center">诗词分类</h2>
+        <div class="flex overflow-x-auto pb-4 space-x-6 scrollbar-hide">
+          <div
+            v-for="(category, index) in categories"
+            :key="index"
+            class="flex-shrink-0 w-64 bg-white rounded-xl shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
+          >
+            <img
+              :src="category.image"
+              :alt="category.name"
+              class="w-full h-40 object-cover"
+            />
+            <div class="p-4 text-center">
+              <h3 class="text-xl font-semibold">{{ category.name }}</h3>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Famous Poets -->
+    <section class="py-16 px-8">
+      <div class="max-w-7xl mx-auto">
+        <h2 class="text-3xl font-bold mb-10 text-center">名家作品</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+          <div
+            v-for="(poet, index) in famousPoets"
+            :key="index"
+            class="bg-white rounded-xl shadow-lg p-6 flex flex-col items-center text-center"
+          >
+            <img
+              :src="poet.avatar"
+              :alt="poet.name"
+              class="w-24 h-24 rounded-full object-cover mb-4 border-4 border-amber-100"
+            />
+            <h3 class="text-2xl font-bold mb-2">{{ poet.name }}</h3>
+            <p class="text-gray-600 mb-4">{{ poet.dynasty }}</p>
+            <p class="text-gray-700 mb-6">{{ poet.bio }}</p>
+            <div class="w-full">
+              <h4 class="text-lg font-semibold mb-3">代表作品</h4>
+              <ul class="space-y-2">
+                <li
+                  v-for="(work, idx) in poet.works"
+                  :key="idx"
+                  class="text-amber-700 hover:text-amber-800 cursor-pointer"
+                >
+                  {{ work }}
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Community Section -->
+    <section class="py-16 bg-gray-100">
+      <div class="max-w-7xl mx-auto px-8">
+        <h2 class="text-3xl font-bold mb-10 text-center">诗词社区</h2>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div class="bg-white rounded-xl shadow-lg p-6">
+            <h3 class="text-xl font-bold mb-4">最新创作</h3>
+            <div
+              v-for="(post, index) in communityPosts"
+              :key="index"
+              class="border-b border-gray-200 pb-4 mb-4 last:border-0 last:pb-0 last:mb-0"
+            >
+              <div class="flex items-start mb-2">
+                <img
+                  :src="post.avatar"
+                  :alt="post.author"
+                  class="w-10 h-10 rounded-full mr-3"
+                />
+                <div>
+                  <h4 class="font-semibold">{{ post.author }}</h4>
+                  <p class="text-gray-500 text-sm">{{ post.time }}</p>
+                </div>
+              </div>
+              <p class="text-gray-700 mb-2">{{ post.content }}</p>
+              <div class="flex space-x-4 text-gray-500">
+                <button class="flex items-center space-x-1 hover:text-amber-600">
+                  <i class="fas fa-thumbs-up"></i>
+                  <span>{{ post.likes }}</span>
+                </button>
+                <button class="flex items-center space-x-1 hover:text-amber-600">
+                  <i class="fas fa-comment"></i>
+                  <span>{{ post.comments }}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="bg-white rounded-xl shadow-lg p-6">
+            <h3 class="text-xl font-bold mb-4">热门讨论</h3>
+            <div class="space-y-4">
+              <div
+                v-for="(topic, index) in discussionTopics"
+                :key="index"
+                class="border border-gray-200 rounded-lg p-4 hover:border-amber-300 transition-colors cursor-pointer"
+              >
+                <h4 class="font-bold mb-2">{{ topic.title }}</h4>
+                <p class="text-gray-600 text-sm mb-3">{{ topic.excerpt }}</p>
+                <div class="flex justify-between text-gray-500 text-sm">
+                  <span>{{ topic.replies }} 回复</span>
+                  <span>{{ topic.lastReply }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white pt-16 pb-8">
+      <div class="max-w-7xl mx-auto px-8">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
+          <div>
+            <h3 class="text-xl font-bold mb-4">诗韵赏析</h3>
+            <p class="text-gray-400">
+              传承中华文化，品读诗词之美。我们致力于为诗词爱好者提供一个高品质的欣赏与交流平台。
+            </p>
+          </div>
+          <div>
+            <h4 class="text-lg font-semibold mb-4">快速链接</h4>
+            <ul class="space-y-2 text-gray-400">
+              <li><a href="#" class="hover:text-amber-400 transition-colors">关于我们</a></li>
+              <li><a href="#" class="hover:text-amber-400 transition-colors">联系我们</a></li>
+              <li><a href="#" class="hover:text-amber-400 transition-colors">版权声明</a></li>
+              <li><a href="#" class="hover:text-amber-400 transition-colors">隐私政策</a></li>
+            </ul>
+          </div>
+          <div>
+            <h4 class="text-lg font-semibold mb-4">友情链接</h4>
+            <ul class="space-y-2 text-gray-400">
+              <li><a href="#" class="hover:text-amber-400 transition-colors">中国诗歌网</a></li>
+              <li><a href="#" class="hover:text-amber-400 transition-colors">古诗文网</a></li>
+              <li><a href="#" class="hover:text-amber-400 transition-colors">诗词名句网</a></li>
+              <li><a href="#" class="hover:text-amber-400 transition-colors">中华诗词学会</a></li>
+            </ul>
+          </div>
+          <div>
+            <h4 class="text-lg font-semibold mb-4">联系我们</h4>
+            <ul class="space-y-2 text-gray-400">
+              <li class="flex items-start">
+                <i class="fas fa-map-marker-alt mt-1 mr-2"></i>
+                <span>北京市朝阳区诗词文化中心</span>
+              </li>
+              <li class="flex items-center">
+                <i class="fas fa-phone-alt mr-2"></i>
+                <span>400-123-4567</span>
+              </li>
+              <li class="flex items-center">
+                <i class="fas fa-envelope mr-2"></i>
+                <span>contact@shiyun.com</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="border-t border-gray-800 pt-8 text-center text-gray-500">
+          <p>© 2023 诗韵赏析平台. 保留所有权利.</p>
+        </div>
+      </div>
+    </footer>
+  </div>
+</template>
+
+<style scoped>
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-clamp: 3;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+</style>
