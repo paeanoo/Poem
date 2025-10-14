@@ -1,30 +1,31 @@
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+import { usePoemStore } from '@/stores/poem';
+import * as PoetryService from '@/services/poetry';
 
 // Hot Poems Data
-const hotPoems = ref([
-  {
-    title: "静夜思",
-    author: "李白",
-    dynasty: "唐代",
-    excerpt: "床前明月光，疑是地上霜。举头望明月，低头思故乡。",
-    image: "https://ai-public.mastergo.com/ai/img_res/8677cddd3f0c7f7a0d32c3dee650cb8d.jpg"
-  },
-  {
-    title: "春晓",
-    author: "孟浩然",
-    dynasty: "唐代",
-    excerpt: "春眠不觉晓，处处闻啼鸟。夜来风雨声，花落知多少。",
-    image: "https://ai-public.mastergo.com/ai/img_res/6b6e61661d2253c75c313cc63c5b76cf.jpg"
-  },
-  {
-    title: "水调歌头",
-    author: "苏轼",
-    dynasty: "宋代",
-    excerpt: "明月几时有？把酒问青天。不知天上宫阙，今夕是何年。",
-    image: "https://ai-public.mastergo.com/ai/img_res/0c11e79fb281ece1012244495299476e.jpg"
+const hotPoems = ref<{ title: string; author: string; dynasty?: string; excerpt: string; image: string }[]>([]);
+
+onMounted(async () => {
+  try {
+    // 使用远端优先、失败回退本地的数据源，保证拿到完整原文
+    const list = await PoetryService.getPoems();
+    hotPoems.value = list.slice(0, 3).map((p, idx) => ({
+      title: p.title,
+      author: p.author,
+      dynasty: p.dynasty,
+      excerpt: p.content.join('\n'),
+      image: [
+        'https://ai-public.mastergo.com/ai/img_res/8677cddd3f0c7f7a0d32c3dee650cb8d.jpg',
+        'https://ai-public.mastergo.com/ai/img_res/6b6e61661d2253c75c313cc63c5b76cf.jpg',
+        'https://ai-public.mastergo.com/ai/img_res/0c11e79fb281ece1012244495299476e.jpg',
+      ][idx % 3],
+    }));
+  } catch {
+    // ignore
   }
-]);
+});
 
 // Categories Data
 const categories = ref([
@@ -124,6 +125,39 @@ const discussionTopics = ref([
     lastReply: "昨天"
   }
 ]);
+
+const router = useRouter();
+const store = usePoemStore();
+
+const normalizeCategory = (name: string) => {
+  // 将 "唐诗" -> "唐"，"宋词" -> "宋"，其余取首字
+  if (!name) return name;
+  const first = name.charAt(0);
+  return first;
+};
+
+const onSearchEnter = (e: KeyboardEvent) => {
+  const target = e.target as HTMLInputElement;
+  const q = target.value.trim();
+  if (!q) return;
+  router.push({ name: 'search', query: { q } });
+};
+
+const goto = (name: string, params?: Record<string, any>, query?: Record<string, any>) => {
+  router.push({ name, params, query });
+};
+
+const onHotPoemClick = async (title: string) => {
+  if (!store.poems.length) {
+    await store.fetchPoems();
+  }
+  const id = store.findPoemIdByTitle(title);
+  if (id) {
+    router.push({ name: 'poem-detail', params: { id } });
+  } else {
+    router.push({ name: 'search', query: { q: title } });
+  }
+};
 </script>
 
 <template>
@@ -133,11 +167,11 @@ const discussionTopics = ref([
       <div class="flex items-center space-x-10">
         <h1 class="text-2xl font-bold">诗韵赏析</h1>
         <div class="flex space-x-6">
-          <a href="#" class="hover:text-amber-400 transition-colors">首页</a>
-          <a href="#" class="hover:text-amber-400 transition-colors">诗词分类</a>
-          <a href="#" class="hover:text-amber-400 transition-colors">名家推荐</a>
-          <a href="#" class="hover:text-amber-400 transition-colors">我的收藏</a>
-          <a href="#" class="hover:text-amber-400 transition-colors">个人中心</a>
+          <a href="#" @click.prevent="goto('home')" class="hover:text-amber-400 transition-colors">首页</a>
+          <a href="#" @click.prevent="goto('category', { name: '唐' })" class="hover:text-amber-400 transition-colors">诗词分类</a>
+          <a href="#" @click.prevent="goto('community')" class="hover:text-amber-400 transition-colors">名家推荐</a>
+          <a href="#" @click.prevent="goto('collections')" class="hover:text-amber-400 transition-colors">我的收藏</a>
+          <a href="#" @click.prevent="goto('profile')" class="hover:text-amber-400 transition-colors">个人中心</a>
         </div>
       </div>
       <div class="flex items-center space-x-4">
@@ -146,6 +180,7 @@ const discussionTopics = ref([
             type="text"
             placeholder="搜索诗词、作者..."
             class="bg-gray-800 text-white rounded-full py-2 px-4 pl-10 focus:outline-none focus:ring-2 focus:ring-amber-500 w-64"
+            @keyup.enter="onSearchEnter"
           />
           <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
         </div>
@@ -169,7 +204,7 @@ const discussionTopics = ref([
           <p class="text-xl mb-8 leading-relaxed">
             在这里，您可以欣赏到从唐诗宋词到现代诗歌的精华之作，感受中华文化的深厚底蕴与无穷魅力。
           </p>
-          <button class="!rounded-button whitespace-nowrap bg-amber-600 hover:bg-amber-700 text-white py-3 px-8 text-lg font-medium transition-colors">
+          <button class="!rounded-button whitespace-nowrap bg-amber-600 hover:bg-amber-700 text-white py-3 px-8 text-lg font-medium transition-colors" @click="goto('community')">
             开始探索
           </button>
         </div>
@@ -185,6 +220,7 @@ const discussionTopics = ref([
             v-for="(poem, index) in hotPoems"
             :key="index"
             class="bg-white rounded-xl shadow-lg overflow-hidden transition-transform hover:scale-105"
+            @click="onHotPoemClick(poem.title)"
           >
             <img
               :src="poem.image"
@@ -199,7 +235,7 @@ const discussionTopics = ref([
                 </button>
               </div>
               <p class="text-gray-600 mb-2">{{ poem.author }} · {{ poem.dynasty }}</p>
-              <p class="text-gray-700 line-clamp-3">{{ poem.excerpt }}</p>
+              <div class="text-gray-700 whitespace-pre-line">{{ poem.excerpt }}</div>
             </div>
           </div>
         </div>
@@ -215,6 +251,7 @@ const discussionTopics = ref([
             v-for="(category, index) in categories"
             :key="index"
             class="flex-shrink-0 w-64 bg-white rounded-xl shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
+            @click="goto('category', { name: normalizeCategory(category.name) })"
           >
             <img
               :src="category.image"
@@ -238,6 +275,7 @@ const discussionTopics = ref([
             v-for="(poet, index) in famousPoets"
             :key="index"
             class="bg-white rounded-xl shadow-lg p-6 flex flex-col items-center text-center"
+            @click="goto('poet', { name: poet.name })"
           >
             <img
               :src="poet.avatar"
@@ -254,6 +292,7 @@ const discussionTopics = ref([
                   v-for="(work, idx) in poet.works"
                   :key="idx"
                   class="text-amber-700 hover:text-amber-800 cursor-pointer"
+                  @click.stop="goto('search', {}, { q: work })"
                 >
                   {{ work }}
                 </li>

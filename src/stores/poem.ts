@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { Poem, PoemAnalysis, SearchParams, SearchResult } from '@/types'
+import * as PoetryService from '@/services/poetry'
 
 export const usePoemStore = defineStore('poem', () => {
   // 状态
@@ -28,36 +29,8 @@ export const usePoemStore = defineStore('poem', () => {
     error.value = null
     
     try {
-      // 模拟API调用，使用传入的params参数
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      // 这里应该是实际的API调用，使用传入的params参数
-      // const response = await api.getPoems(params)
-      // poems.value = response.data
-      
-      // 根据params参数进行过滤（模拟）
-      let filteredPoems = [
-        {
-          id: '1',
-          title: '静夜思',
-          author: '李白',
-          dynasty: '唐',
-          content: ['床前明月光', '疑是地上霜', '举头望明月', '低头思故乡'],
-          tags: ['思乡', '月亮', '夜晚'],
-          createdAt: '2024-01-01',
-          updatedAt: '2024-01-01'
-        },
-        {
-          id: '2',
-          title: '春晓',
-          author: '孟浩然',
-          dynasty: '唐',
-          content: ['春眠不觉晓', '处处闻啼鸟', '夜来风雨声', '花落知多少'],
-          tags: ['春天', '自然', '感慨'],
-          createdAt: '2024-01-01',
-          updatedAt: '2024-01-01'
-        }
-      ]
+      // 先尝试远端 API，失败回退本地 JSON
+      let filteredPoems: Poem[] = await PoetryService.getPoems(params)
       
       // 如果传入了params参数，进行过滤
       if (params) {
@@ -76,32 +49,6 @@ export const usePoemStore = defineStore('poem', () => {
       }
       
       poems.value = filteredPoems
-      
-      // 临时使用模拟数据
-      const mockPoems: Poem[] = [
-        {
-          id: '1',
-          title: '静夜思',
-          author: '李白',
-          dynasty: '唐',
-          content: ['床前明月光', '疑是地上霜', '举头望明月', '低头思故乡'],
-          tags: ['思乡', '月亮', '夜晚'],
-          createdAt: '2024-01-01',
-          updatedAt: '2024-01-01'
-        },
-        {
-          id: '2',
-          title: '春晓',
-          author: '孟浩然',
-          dynasty: '唐',
-          content: ['春眠不觉晓', '处处闻啼鸟', '夜来风雨声', '花落知多少'],
-          tags: ['春天', '自然', '感慨'],
-          createdAt: '2024-01-01',
-          updatedAt: '2024-01-01'
-        }
-      ]
-      
-      poems.value = mockPoems
     } catch (err) {
       error.value = err instanceof Error ? err.message : '获取诗词失败'
     } finally {
@@ -117,7 +64,7 @@ export const usePoemStore = defineStore('poem', () => {
       // 模拟API调用
       await new Promise(resolve => setTimeout(resolve, 500))
       
-      const poem = poems.value.find(p => p.id === id)
+      const poem = poems.value.find(p => p.id === id) || await PoetryService.getPoemById(id)
       if (poem) {
         currentPoem.value = poem
       } else {
@@ -138,26 +85,61 @@ export const usePoemStore = defineStore('poem', () => {
       // 模拟API调用
       await new Promise(resolve => setTimeout(resolve, 1500))
       
-      // 模拟赏析数据
-      const mockAnalysis: PoemAnalysis = {
+      const target = poems.value.find(p => p.id === poemId)
+      // 按诗词生成对应的简要赏析，避免套用同一内容
+      let content: PoemAnalysis['content'] = {}
+      if (target) {
+        switch (target.title) {
+          case '静夜思':
+            content = {
+              background: '李白旅居异乡时的即景之作。',
+              theme: '借月抒怀，表达浓重的思乡之情。',
+              techniques: ['对比', '意象', '对仗'],
+              emotions: ['思乡', '孤独'],
+              imagery: ['明月', '霜'],
+              translation: '床前月光如霜。我抬头望月，低头思念故乡。',
+              appreciation: '语言浅白却意境深远，四句起承转合，读来朗朗上口。'
+            }
+            break
+          case '春晓':
+            content = {
+              background: '孟浩然隐居鹿门山时期的作品。',
+              theme: '以春眠与鸟鸣写春天生机与感怀。',
+              techniques: ['对仗', '动静结合'],
+              emotions: ['恬淡', '感慨'],
+              imagery: ['春眠', '啼鸟', '风雨', '落花'],
+              translation: '春天睡觉不知天已大亮，到处听见鸟叫。昨夜又起了风雨，不知花落了多少。',
+              appreciation: '清新自然，含蓄见深情，结句设问耐人寻味。'
+            }
+            break
+          case '水调歌头·明月几时有':
+            content = {
+              background: '苏轼中秋与弟苏辙相隔两地所作。',
+              theme: '借月抒怀，超越羁离的人生达观。',
+              techniques: ['比兴', '哲理抒情', '由景入情'],
+              emotions: ['思亲', '旷达'],
+              imagery: ['明月', '宫阙'],
+              translation: '明月何时出现？举杯问青天……（略）',
+              appreciation: '豪放而蕴哲思，情景交融，境界高远。'
+            }
+            break
+          default:
+            content = {
+              background: `${target.author}《${target.title}》简要赏析。`,
+              theme: '主题以原文为据，可进一步扩充。'
+            }
+        }
+      }
+
+      currentAnalysis.value = {
         id: `analysis_${poemId}_${type}`,
         poemId,
         type,
-        content: {
-          background: '这首诗创作于诗人思乡之时...',
-          theme: '表达了诗人对故乡的深切思念',
-          techniques: ['对比', '意象', '情景交融'],
-          emotions: ['思乡', '孤独', '怀念'],
-          imagery: ['明月', '霜', '故乡'],
-          translation: '床前洒满了明亮的月光，以为是地上结了一层白霜。抬起头来看那天窗外空中的明月，不由得低头思念起故乡来。',
-          appreciation: '全诗语言清新朴素，韵律和谐，意境深远，情感真挚，是思乡诗的经典之作。'
-        },
+        content,
         aiGenerated: true,
-        expertReviewed: true,
+        expertReviewed: false,
         createdAt: '2024-01-01'
       }
-      
-      currentAnalysis.value = mockAnalysis
     } catch (err) {
       error.value = err instanceof Error ? err.message : '获取诗词赏析失败'
     } finally {
@@ -168,33 +150,16 @@ export const usePoemStore = defineStore('poem', () => {
   const searchPoems = async (params: SearchParams) => {
     loading.value = true
     error.value = null
-    
     try {
-      // 模拟搜索API调用
-      await new Promise(resolve => setTimeout(resolve, 800))
-      
-      let filteredPoems = poems.value
-      
-      if (params.keyword) {
-        filteredPoems = filteredPoems.filter(poem =>
-          poem.title.includes(params.keyword!) ||
-          poem.content.some(line => line.includes(params.keyword!))
-        )
-      }
-      
-      if (params.author) {
-        filteredPoems = filteredPoems.filter(poem => poem.author === params.author)
-      }
-      
-      if (params.dynasty) {
-        filteredPoems = filteredPoems.filter(poem => poem.dynasty === params.dynasty)
-      }
-      
+      // 使用服务层：优先远端完整数据，失败回退本地
+      const result = await PoetryService.searchPoems(params)
+      // 同步到全局诗词列表，便于后续详情直接命中
+      poems.value = result
       searchResult.value = {
-        poems: filteredPoems,
-        total: filteredPoems.length,
+        poems: result,
+        total: result.length,
         page: params.page || 1,
-        limit: params.limit || 20
+        limit: params.limit || 20,
       }
     } catch (err) {
       error.value = err instanceof Error ? err.message : '搜索失败'
@@ -210,6 +175,13 @@ export const usePoemStore = defineStore('poem', () => {
   const clearCurrentPoem = () => {
     currentPoem.value = null
     currentAnalysis.value = null
+  }
+
+  // 工具：根据标题查找诗词ID（宽松匹配）
+  const findPoemIdByTitle = (title: string): string | null => {
+    const lower = title.toLowerCase()
+    const found = poems.value.find(p => p.title.toLowerCase().includes(lower))
+    return found ? found.id : null
   }
 
   return {
@@ -232,6 +204,7 @@ export const usePoemStore = defineStore('poem', () => {
     fetchPoemAnalysis,
     searchPoems,
     clearError,
-    clearCurrentPoem
+    clearCurrentPoem,
+    findPoemIdByTitle
   }
 })

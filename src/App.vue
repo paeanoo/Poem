@@ -12,5 +12,16 @@
 <style>
 #app {
   min-height: 100vh;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* 确保body和html没有默认边距 */
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
 }
 </style>
