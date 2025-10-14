@@ -11,11 +11,12 @@ onMounted(async () => {
   try {
     // 使用远端优先、失败回退本地的数据源，保证拿到完整原文
     const list = await PoetryService.getPoems();
-    hotPoems.value = list.slice(0, 3).map((p, idx) => ({
+  hotPoems.value = list.slice(0, 3).map((p, idx) => ({
       title: p.title,
       author: p.author,
       dynasty: p.dynasty,
-      excerpt: p.content.join('\n'),
+      // 仅展示前四句，点击卡片进入详情页
+      excerpt: p.content.slice(0, 4).join('\n'),
       image: [
         'https://ai-public.mastergo.com/ai/img_res/8677cddd3f0c7f7a0d32c3dee650cb8d.jpg',
         'https://ai-public.mastergo.com/ai/img_res/6b6e61661d2253c75c313cc63c5b76cf.jpg',
@@ -275,7 +276,6 @@ const onHotPoemClick = async (title: string) => {
             v-for="(poet, index) in famousPoets"
             :key="index"
             class="bg-white rounded-xl shadow-lg p-6 flex flex-col items-center text-center"
-            @click="goto('poet', { name: poet.name })"
           >
             <img
               :src="poet.avatar"
