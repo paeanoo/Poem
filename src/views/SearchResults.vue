@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { usePoemStore } from '@/stores/poem'
 
 const route = useRoute()
-const router = useRouter()
 const store = usePoemStore()
 
 const keyword = ref<string>('')
