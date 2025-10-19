@@ -1,0 +1,26 @@
+{
+  "success": "={{ $json.success !== false }}",
+  "data": {
+    "message": "={{ $json.output || $json.text || $json.response || $json.data?.message || $json.message || $json.result || $json?.choices?.[0]?.message?.content || $json.error?.message || '抱歉，我暂时无法处理您的请求，请稍后重试。' }}",
+    "confidence": "={{ $json.confidence || $json.data?.confidence || 0.8 }}",
+    "suggestions": "={{ $json.suggestions || $json.data?.suggestions || ['推荐经典诗词', '李白介绍', '诗词创作技巧', '意境解析', '杜甫介绍', '苏轼介绍'] }}",
+    "relatedPoems": "={{ $json.relatedPoems || $json.data?.relatedPoems || [] }}",
+    "debug": {
+      "originalResponse": "={{ JSON.stringify($json) }}",
+      "hasOutput": "={{ !!$json.output }}",
+      "hasText": "={{ !!$json.text }}",
+      "hasResponse": "={{ !!$json.response }}",
+      "hasMessage": "={{ !!$json.message }}",
+      "hasError": "={{ !!$json.error }}",
+      "errorMessage": "={{ $json.error?.message || 'No error message' }}"
+    }
+  },
+  "metadata": {
+    "processingTime": "={{ $json.processingTime || $json.data?.processingTime || 1500 }}",
+    "model": "={{ $json.model || $json.data?.model || 'gpt-3.5-turbo' }}",
+    "version": "={{ $json.version || $json.data?.version || '1.0.0' }}",
+    "timestamp": "={{ new Date().toISOString() }}",
+    "workflowStatus": "={{ $json.workflowStatus || 'completed' }}",
+    "nodeCount": "={{ $json.nodeCount || 'unknown' }}"
+  }
+}

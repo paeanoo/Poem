@@ -1,0 +1,12 @@
+{
+  "success": true,
+  "data": {
+    "message": "={{ $json.output || $json.text || $json.response || $json.data?.message || $json.message || $json.result || $json?.choices?.[0]?.message?.content || $json.error?.message || '抱歉，我暂时无法处理您的请求，请稍后重试。' }}"
+  },
+  "metadata": {
+    "processingTime": "={{ $json.processingTime || 1500 }}",
+    "model": "={{ $json.model || 'gpt-3.5-turbo' }}",
+    "version": "1.0.0",
+    "timestamp": "={{ new Date().toISOString() }}"
+  }
+}
