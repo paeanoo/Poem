@@ -13,7 +13,7 @@ export type JrsSentence = {
 }
 
 const JRS_ENDPOINT = 'https://v2.jinrishici.com/sentence'
-const TOKEN = (import.meta as any).env?.VITE_JRS_TOKEN as string | undefined
+const TOKEN = import.meta.env?.VITE_JRS_TOKEN as string | undefined
 
 export async function fetchSentence(token: string | undefined = TOKEN): Promise<JrsSentence> {
   const headers: Record<string, string> = {}

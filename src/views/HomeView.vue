@@ -3,52 +3,86 @@ import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { usePoemStore } from '@/stores/poem';
 import * as PoetryService from '@/services/poetry';
+import { handleAvatarError } from '@/utils/avatarUtils';
+import AiChatAssistant from '@/components/chat/AiChatAssistant.vue';
 
-// Hot Poems Data
-const hotPoems = ref<{ title: string; author: string; dynasty?: string; excerpt: string; image: string }[]>([]);
+// 状态管理
+const router = useRouter();
 
-onMounted(async () => {
+// 热门诗词推荐
+const hotPoems = ref<{ title: string; author: string; dynasty?: string; excerpt: string; image: string; id: string }[]>([]);
+
+// 加载热门诗词
+const loadHotPoems = async () => {
   try {
-    // 使用远端优先、失败回退本地的数据源，保证拿到完整原文
-    const list = await PoetryService.getPoems();
-  hotPoems.value = list.slice(0, 3).map((p, idx) => ({
+    // 优先使用getPopularPoems方法获取热门诗词
+    const list = await PoetryService.getPopularPoems(6);
+    hotPoems.value = list.map((p, idx) => ({
+      id: p.id,
       title: p.title,
       author: p.author,
       dynasty: p.dynasty,
-      // 仅展示前四句，点击卡片进入详情页
       excerpt: p.content.slice(0, 4).join('\n'),
       image: [
         'https://ai-public.mastergo.com/ai/img_res/8677cddd3f0c7f7a0d32c3dee650cb8d.jpg',
         'https://ai-public.mastergo.com/ai/img_res/6b6e61661d2253c75c313cc63c5b76cf.jpg',
         'https://ai-public.mastergo.com/ai/img_res/0c11e79fb281ece1012244495299476e.jpg',
-      ][idx % 3],
+        'https://ai-public.mastergo.com/ai/img_res/d34749196cfc2826de5f2f07fe2cb79a.jpg',
+        'https://ai-public.mastergo.com/ai/img_res/4523c49c729013fd127bd26518ad4940.jpg',
+        'https://ai-public.mastergo.com/ai/img_res/a0587ab694073b7efa3ca42a84bc6133.jpg',
+      ][idx % 6],
     }));
-  } catch {
-    // ignore
+  } catch (error) {
+    console.error('加载热门诗词失败:', error);
+    // 如果热门诗词加载失败，使用备用数据
+    try {
+      const fallbackList = await PoetryService.getPoems();
+      hotPoems.value = fallbackList.slice(0, 6).map((p, idx) => ({
+        id: p.id,
+        title: p.title,
+        author: p.author,
+        dynasty: p.dynasty,
+        excerpt: p.content.slice(0, 4).join('\n'),
+        image: [
+          'https://ai-public.mastergo.com/ai/img_res/8677cddd3f0c7f7a0d32c3dee650cb8d.jpg',
+          'https://ai-public.mastergo.com/ai/img_res/6b6e61661d2253c75c313cc63c5b76cf.jpg',
+          'https://ai-public.mastergo.com/ai/img_res/0c11e79fb281ece1012244495299476e.jpg',
+          'https://ai-public.mastergo.com/ai/img_res/d34749196cfc2826de5f2f07fe2cb79a.jpg',
+          'https://ai-public.mastergo.com/ai/img_res/4523c49c729013fd127bd26518ad4940.jpg',
+          'https://ai-public.mastergo.com/ai/img_res/a0587ab694073b7efa3ca42a84bc6133.jpg',
+        ][idx % 6],
+      }));
+    } catch (fallbackError) {
+      console.error('备用数据加载也失败:', fallbackError);
+    }
   }
+};
+
+// 处理图片加载失败
+const handleImageError = (event: Event) => {
+  handleAvatarError(event);
+};
+
+onMounted(async () => {
+  await loadHotPoems();
 });
 
-// Categories Data
+// Categories Data - 保留三个主要分类，使用新的本地图片
 const categories = ref([
   {
     name: "唐诗",
-    image: "https://ai-public.mastergo.com/ai/img_res/d34749196cfc2826de5f2f07fe2cb79a.jpg"
+    image: "/images/唐诗.png",
+    description: "唐代诗歌，中国诗歌的黄金时代"
   },
   {
     name: "宋词",
-    image: "https://ai-public.mastergo.com/ai/img_res/4523c49c729013fd127bd26518ad4940.jpg"
+    image: "/images/宋词.png",
+    description: "宋代词作，婉约与豪放并存"
   },
   {
     name: "元曲",
-    image: "https://ai-public.mastergo.com/ai/img_res/a0587ab694073b7efa3ca42a84bc6133.jpg"
-  },
-  {
-    name: "古风",
-    image: "https://ai-public.mastergo.com/ai/img_res/e06e1a514aa99a59c067b573be0237ba.jpg"
-  },
-  {
-    name: "现代诗",
-    image: "https://ai-public.mastergo.com/ai/img_res/d886ed86ef20e7d32f9a84d95b0aa952.jpg"
+    image: "/images/元曲.png",
+    description: "元代散曲和杂剧，通俗文学的代表"
   }
 ]);
 
@@ -58,21 +92,21 @@ const famousPoets = ref([
     name: "李白",
     dynasty: "唐代",
     bio: "字太白，号青莲居士，唐代伟大的浪漫主义诗人，被后人誉为'诗仙'。",
-    avatar: "https://ai-public.mastergo.com/ai/img_res/2bf8404ae3e124e607b9bdd4774dde56.jpg",
+    avatar: "/images/poets/li-bai.jpg",
     works: ["将进酒", "蜀道难", "早发白帝城"]
   },
   {
     name: "杜甫",
     dynasty: "唐代",
     bio: "字子美，自号少陵野老，唐代伟大的现实主义诗人，被后人称为'诗圣'。",
-    avatar: "https://ai-public.mastergo.com/ai/img_res/f6eaa94ef2e2ea4f27a2a85b42fc3b47.jpg",
+    avatar: "/images/poets/du-fu.jpg",
     works: ["春望", "茅屋为秋风所破歌", "登高"]
   },
   {
     name: "苏轼",
     dynasty: "宋代",
     bio: "字子瞻，号东坡居士，北宋著名文学家、书画家，豪放派词人代表。",
-    avatar: "https://ai-public.mastergo.com/ai/img_res/3f491984791c93011fd152fa6d94e28f.jpg",
+    avatar: "/images/poets/su-shi.jpg",
     works: ["念奴娇·赤壁怀古", "水调歌头·明月几时有", "江城子·密州出猎"]
   }
 ]);
@@ -127,69 +161,26 @@ const discussionTopics = ref([
   }
 ]);
 
-const router = useRouter();
-const store = usePoemStore();
-
+// 工具函数
 const normalizeCategory = (name: string) => {
-  // 将 "唐诗" -> "唐"，"宋词" -> "宋"，其余取首字
   if (!name) return name;
   const first = name.charAt(0);
   return first;
 };
 
-const onSearchEnter = (e: KeyboardEvent) => {
-  const target = e.target as HTMLInputElement;
-  const q = target.value.trim();
-  if (!q) return;
-  router.push({ name: 'search', query: { q } });
-};
 
-const goto = (name: string, params?: Record<string, any>, query?: Record<string, any>) => {
+const goto = (name: string, params?: Record<string, string | number>, query?: Record<string, string | number | string[]>) => {
   router.push({ name, params, query });
 };
 
-const onHotPoemClick = async (title: string) => {
-  if (!store.poems.length) {
-    await store.fetchPoems();
-  }
-  const id = store.findPoemIdByTitle(title);
-  if (id) {
-    router.push({ name: 'poem-detail', params: { id } });
-  } else {
-    router.push({ name: 'search', query: { q: title } });
-  }
+const onHotPoemClick = async (poem: { id: string; title: string }) => {
+  router.push({ name: 'poem-detail', params: { id: poem.id } });
 };
+
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <!-- Navigation Bar -->
-    <nav class="bg-gray-900 text-white py-4 px-8 flex items-center justify-between shadow-md">
-      <div class="flex items-center space-x-10">
-        <h1 class="text-2xl font-bold">诗韵赏析</h1>
-        <div class="flex space-x-6">
-          <a href="#" @click.prevent="goto('home')" class="hover:text-amber-400 transition-colors">首页</a>
-          <a href="#" @click.prevent="goto('category', { name: '唐' })" class="hover:text-amber-400 transition-colors">诗词分类</a>
-          <a href="#" @click.prevent="goto('community')" class="hover:text-amber-400 transition-colors">名家推荐</a>
-          <a href="#" @click.prevent="goto('collections')" class="hover:text-amber-400 transition-colors">我的收藏</a>
-          <a href="#" @click.prevent="goto('profile')" class="hover:text-amber-400 transition-colors">个人中心</a>
-        </div>
-      </div>
-      <div class="flex items-center space-x-4">
-        <div class="relative">
-          <input
-            type="text"
-            placeholder="搜索诗词、作者..."
-            class="bg-gray-800 text-white rounded-full py-2 px-4 pl-10 focus:outline-none focus:ring-2 focus:ring-amber-500 w-64"
-            @keyup.enter="onSearchEnter"
-          />
-          <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-        </div>
-        <div class="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center cursor-pointer">
-          <i class="fas fa-user text-xl"></i>
-        </div>
-      </div>
-    </nav>
+  <div class="min-h-screen bg-gray-50 text-gray-900">
 
     <!-- Hero Banner -->
     <section class="relative h-[500px] overflow-hidden">
@@ -212,16 +203,18 @@ const onHotPoemClick = async (title: string) => {
       </div>
     </section>
 
+
+
     <!-- Hot Poetry Recommendations -->
-    <section class="py-16 px-8">
+    <section class="py-16 px-8 bg-gray-50 text-gray-900">
       <div class="max-w-7xl mx-auto">
-        <h2 class="text-3xl font-bold mb-10 text-center">热门诗词推荐</h2>
+        <h2 class="text-3xl font-bold mb-10 text-center text-gray-900">热门诗词推荐</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           <div
             v-for="(poem, index) in hotPoems"
             :key="index"
-            class="bg-white rounded-xl shadow-lg overflow-hidden transition-transform hover:scale-105"
-            @click="onHotPoemClick(poem.title)"
+            class="bg-white rounded-xl shadow-lg overflow-hidden transition-transform hover:scale-105 cursor-pointer"
+            @click="onHotPoemClick(poem)"
           >
             <img
               :src="poem.image"
@@ -231,9 +224,6 @@ const onHotPoemClick = async (title: string) => {
             <div class="p-6">
               <div class="flex justify-between items-start mb-3">
                 <h3 class="text-xl font-bold">{{ poem.title }}</h3>
-                <button class="text-amber-600 hover:text-amber-700">
-                  <i class="fas fa-heart"></i>
-                </button>
               </div>
               <p class="text-gray-600 mb-2">{{ poem.author }} · {{ poem.dynasty }}</p>
               <div class="text-gray-700 whitespace-pre-line">{{ poem.excerpt }}</div>
@@ -247,20 +237,21 @@ const onHotPoemClick = async (title: string) => {
     <section class="py-12 bg-gray-100">
       <div class="max-w-7xl mx-auto px-8">
         <h2 class="text-3xl font-bold mb-8 text-center">诗词分类</h2>
-        <div class="flex overflow-x-auto pb-4 space-x-6 scrollbar-hide">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
           <div
             v-for="(category, index) in categories"
             :key="index"
-            class="flex-shrink-0 w-64 bg-white rounded-xl shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
+            class="bg-white rounded-xl shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-105"
             @click="goto('category', { name: normalizeCategory(category.name) })"
           >
             <img
               :src="category.image"
               :alt="category.name"
-              class="w-full h-40 object-cover"
+              class="w-full h-48 object-cover"
             />
-            <div class="p-4 text-center">
-              <h3 class="text-xl font-semibold">{{ category.name }}</h3>
+            <div class="p-6 text-center">
+              <h3 class="text-2xl font-semibold mb-2">{{ category.name }}</h3>
+              <p class="text-gray-600 text-sm">{{ category.description }}</p>
             </div>
           </div>
         </div>
@@ -281,6 +272,7 @@ const onHotPoemClick = async (title: string) => {
               :src="poet.avatar"
               :alt="poet.name"
               class="w-24 h-24 rounded-full object-cover mb-4 border-4 border-amber-100"
+              @error="handleImageError"
             />
             <h3 class="text-2xl font-bold mb-2">{{ poet.name }}</h3>
             <p class="text-gray-600 mb-4">{{ poet.dynasty }}</p>
@@ -360,57 +352,9 @@ const onHotPoemClick = async (title: string) => {
       </div>
     </section>
 
-    <!-- Footer -->
-    <footer class="bg-gray-900 text-white pt-16 pb-8">
-      <div class="max-w-7xl mx-auto px-8">
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
-          <div>
-            <h3 class="text-xl font-bold mb-4">诗韵赏析</h3>
-            <p class="text-gray-400">
-              传承中华文化，品读诗词之美。我们致力于为诗词爱好者提供一个高品质的欣赏与交流平台。
-            </p>
-          </div>
-          <div>
-            <h4 class="text-lg font-semibold mb-4">快速链接</h4>
-            <ul class="space-y-2 text-gray-400">
-              <li><a href="#" class="hover:text-amber-400 transition-colors">关于我们</a></li>
-              <li><a href="#" class="hover:text-amber-400 transition-colors">联系我们</a></li>
-              <li><a href="#" class="hover:text-amber-400 transition-colors">版权声明</a></li>
-              <li><a href="#" class="hover:text-amber-400 transition-colors">隐私政策</a></li>
-            </ul>
-          </div>
-          <div>
-            <h4 class="text-lg font-semibold mb-4">友情链接</h4>
-            <ul class="space-y-2 text-gray-400">
-              <li><a href="#" class="hover:text-amber-400 transition-colors">中国诗歌网</a></li>
-              <li><a href="#" class="hover:text-amber-400 transition-colors">古诗文网</a></li>
-              <li><a href="#" class="hover:text-amber-400 transition-colors">诗词名句网</a></li>
-              <li><a href="#" class="hover:text-amber-400 transition-colors">中华诗词学会</a></li>
-            </ul>
-          </div>
-          <div>
-            <h4 class="text-lg font-semibold mb-4">联系我们</h4>
-            <ul class="space-y-2 text-gray-400">
-              <li class="flex items-start">
-                <i class="fas fa-map-marker-alt mt-1 mr-2"></i>
-                <span>北京市朝阳区诗词文化中心</span>
-              </li>
-              <li class="flex items-center">
-                <i class="fas fa-phone-alt mr-2"></i>
-                <span>400-123-4567</span>
-              </li>
-              <li class="flex items-center">
-                <i class="fas fa-envelope mr-2"></i>
-                <span>contact@shiyun.com</span>
-              </li>
-            </ul>
-          </div>
-        </div>
-        <div class="border-t border-gray-800 pt-8 text-center text-gray-500">
-          <p>© 2023 诗韵赏析平台. 保留所有权利.</p>
-        </div>
-      </div>
-    </footer>
+    <!-- AI聊天助手 -->
+    <AiChatAssistant />
+
   </div>
 </template>
 

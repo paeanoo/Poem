@@ -1,12 +1,15 @@
 <template>
   <div id="app">
+    <SiteHeader />
     <!-- 路由视图容器 -->
     <RouterView />
+    <SiteFooter />
   </div>
 </template>
 
 <script setup lang="ts">
-// App.vue 现在只作为路由容器
+import SiteHeader from '@/components/layout/SiteHeader.vue'
+import SiteFooter from '@/components/layout/SiteFooter.vue'
 </script>
 
 <style>

@@ -27,29 +27,35 @@ export const usePoemStore = defineStore('poem', () => {
   const fetchPoems = async (params?: SearchParams) => {
     loading.value = true
     error.value = null
-    
+
     try {
+      console.log('📚 获取诗词数据:', params)
       // 先尝试远端 API，失败回退本地 JSON
       let filteredPoems: Poem[] = await PoetryService.getPoems(params)
-      
-      // 如果传入了params参数，进行过滤
+      console.log('📚 获取到诗词数量:', filteredPoems.length)
+
+      // 如果传入了params参数，进行额外过滤（服务层已经处理了大部分过滤）
       if (params) {
         if (params.author) {
-          filteredPoems = filteredPoems.filter(poem => poem.author === params.author)
+          filteredPoems = filteredPoems.filter(poem => poem.author.toLowerCase().includes(params.author!.toLowerCase()))
         }
         if (params.dynasty) {
           filteredPoems = filteredPoems.filter(poem => poem.dynasty === params.dynasty)
         }
         if (params.keyword) {
+          const keyword = params.keyword.toLowerCase()
           filteredPoems = filteredPoems.filter(poem =>
-            poem.title.includes(params.keyword!) ||
-            poem.content.some(line => line.includes(params.keyword!))
+            poem.title.toLowerCase().includes(keyword) ||
+            poem.author.toLowerCase().includes(keyword) ||
+            poem.content.some(line => line.toLowerCase().includes(keyword))
           )
         }
       }
-      
+
+      console.log('📚 最终诗词数量:', filteredPoems.length)
       poems.value = filteredPoems
     } catch (err) {
+      console.error('❌ 获取诗词失败:', err)
       error.value = err instanceof Error ? err.message : '获取诗词失败'
     } finally {
       loading.value = false
@@ -59,11 +65,11 @@ export const usePoemStore = defineStore('poem', () => {
   const fetchPoemById = async (id: string) => {
     loading.value = true
     error.value = null
-    
+
     try {
       // 模拟API调用
       await new Promise(resolve => setTimeout(resolve, 500))
-      
+
       const poem = poems.value.find(p => p.id === id) || await PoetryService.getPoemById(id)
       if (poem) {
         currentPoem.value = poem
@@ -80,11 +86,11 @@ export const usePoemStore = defineStore('poem', () => {
   const fetchPoemAnalysis = async (poemId: string, type: 'basic' | 'advanced' | 'expert' = 'basic') => {
     loading.value = true
     error.value = null
-    
+
     try {
       // 模拟API调用
       await new Promise(resolve => setTimeout(resolve, 1500))
-      
+
       const target = poems.value.find(p => p.id === poemId)
       // 按诗词生成对应的简要赏析，避免套用同一内容
       let content: PoemAnalysis['content'] = {}
@@ -151,8 +157,11 @@ export const usePoemStore = defineStore('poem', () => {
     loading.value = true
     error.value = null
     try {
+      console.log('🔍 开始搜索:', params)
       // 使用服务层：优先远端完整数据，失败回退本地
       const result = await PoetryService.searchPoems(params)
+      console.log('📚 搜索结果:', result.length, '首诗词')
+
       // 同步到全局诗词列表，便于后续详情直接命中
       poems.value = result
       searchResult.value = {
@@ -162,6 +171,7 @@ export const usePoemStore = defineStore('poem', () => {
         limit: params.limit || 20,
       }
     } catch (err) {
+      console.error('❌ 搜索失败:', err)
       error.value = err instanceof Error ? err.message : '搜索失败'
     } finally {
       loading.value = false
@@ -192,12 +202,12 @@ export const usePoemStore = defineStore('poem', () => {
     searchResult,
     loading,
     error,
-    
+
     // 计算属性
     poemsCount,
     dynastyList,
     authorList,
-    
+
     // 方法
     fetchPoems,
     fetchPoemById,

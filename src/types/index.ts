@@ -22,6 +22,7 @@ export interface Poet {
   representativeWorks: string[]
   birthYear?: number
   deathYear?: number
+  avatar?: string
 }
 
 /** 朝代信息 */
@@ -105,7 +106,7 @@ export interface SearchResult {
 }
 
 /** API响应格式 */
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean
   data: T
   message?: string

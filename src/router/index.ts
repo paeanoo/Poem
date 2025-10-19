@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 import HomeView from '../views/HomeView.vue'
 
 const router = createRouter({
@@ -8,6 +9,11 @@ const router = createRouter({
       path: '/',
       name: 'home',
       component: HomeView,
+    },
+    {
+      path: '/auth/callback',
+      name: 'auth-callback',
+      component: () => import('../views/AuthCallback.vue'),
     },
     {
       path: '/about',
@@ -48,11 +54,43 @@ const router = createRouter({
       component: () => import('../views/Profile.vue'),
     },
     {
+      path: '/settings/password',
+      name: 'change-password',
+      component: () => import('../views/ChangePassword.vue'),
+    },
+    {
+      path: '/login',
+      name: 'login',
+      component: () => import('../views/LoginView.vue'),
+    },
+    {
       path: '/community',
       name: 'community',
       component: () => import('../views/Community.vue'),
+    },
+    {
+      path: '/n8n-test',
+      name: 'n8n-test',
+      component: () => import('../views/N8nTestView.vue'),
+    },
+    {
+      path: '/:pathMatch(.*)*',
+      name: 'not-found',
+      component: () => import('../views/NotFound.vue'),
     },
   ],
 })
 
 export default router
+
+// 路由守卫：邮箱未验证则限制访问需要登录的页面
+router.beforeEach((to) => {
+  const auth = useAuthStore()
+  const needAuth = ['/collections', '/profile'].includes(to.path)
+  if (!needAuth) return true
+  if (!auth.user) return { name: 'login', query: { redirect: to.fullPath } }
+  if (!auth.user.email_confirmed_at) {
+    return { name: 'login', query: { needVerify: '1' } }
+  }
+  return true
+})
