@@ -64,7 +64,7 @@ export interface ChatResponse {
 const defaultConfig: N8nWorkflowConfig = {
   webhookUrl: 'https://paean.app.n8n.cloud/webhook/poetry-analysis',
   apiKey: import.meta.env?.VITE_N8N_API_KEY,
-  timeout: 30000,
+  timeout: 60000, // 增加到60秒，因为工作流需要30-40秒处理时间
   retryAttempts: 3,
   retryDelay: 1000
 };
@@ -75,6 +75,63 @@ export class N8nService {
   constructor(config: Partial<N8nWorkflowConfig> = {}) {
     this.config = { ...defaultConfig, ...config };
     this.assertConfig();
+  }
+
+  /**
+   * 以 application/x-www-form-urlencoded 方式发送简易表单请求
+   * n8n 期望参数名：chatInput
+   */
+  async sendFormText(userText: string): Promise<ChatResponse> {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), this.config.timeout);
+
+    try {
+      const body = new URLSearchParams({ chatInput: userText }).toString();
+      const response = await fetch(this.config.webhookUrl, {
+        method: 'POST',
+        mode: 'cors',
+        credentials: 'omit',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body,
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        const errText = await this.safeReadText(response);
+        throw new Error(`HTTP ${response.status}: ${response.statusText}${errText ? ' - ' + errText : ''}`);
+      }
+
+      // 期望 n8n 返回 JSON（保留原始文本便于报错时定位）
+      let parsed: unknown;
+      const rawText = await this.safeReadText(response);
+      try {
+        parsed = this.tryParseJSON(rawText) ?? (rawText ? { message: rawText } : {});
+      } catch {
+        parsed = rawText ? { message: rawText } : {};
+      }
+      try {
+        return this.validateResponse(parsed);
+      } catch (e) {
+        // 抛出时携带原始片段，方便在 chat.ts 第68行判定问题
+        const snippet = (rawText || '').slice(0, 300);
+        const contentType = response.headers.get('content-type') || '';
+        throw new Error(`${e instanceof Error ? e.message : '解析失败'} | content-type=${contentType} | raw="${snippet}"`);
+      }
+    } catch (error) {
+      clearTimeout(timeoutId);
+      if (error instanceof Error) {
+        if (error.name === 'AbortError' || error.name === 'DOMException') {
+          throw new Error(`请求超时（${this.config.timeout}ms）`);
+        }
+        if (error instanceof TypeError) {
+          throw new Error('网络或跨域失败，请检查 CORS 设置与网络连通');
+        }
+        throw error;
+      }
+      throw new Error('未知错误');
+    }
   }
 
   private assertConfig() {
@@ -138,26 +195,41 @@ export class N8nService {
         throw new Error(`HTTP ${response.status}: ${response.statusText}${errText ? ' - ' + errText : ''}`);
       }
 
-      // 优先 JSON，失败回退文本；不依赖 content-length
+      // 先读取文本内容，然后尝试解析JSON
       let parsed: unknown;
       try {
-        // 先检查响应内容类型
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('application/json')) {
-          parsed = await response.json();
-        } else {
-          // 如果不是 JSON，直接读取文本
-          const txt = await response.text();
-          parsed = this.tryParseJSON(txt) ?? (txt ? { message: txt } : {});
+        const txt = await response.text();
+        console.log('📥 收到响应内容:', txt);
+        console.log('📥 响应长度:', txt.length);
+
+        if (!txt || txt.trim() === '') {
+          console.warn('⚠️ n8n工作流返回空响应，尝试使用默认回复');
+          // 返回一个默认的响应，而不是抛出错误
+          return {
+            success: true,
+            data: {
+              message: '抱歉，AI助手暂时无法处理您的请求。请检查网络连接或稍后重试。'
+            },
+            metadata: {
+              processingTime: 0,
+              model: 'fallback',
+              version: '1.0.0'
+            }
+          };
         }
-      } catch (jsonError) {
-        // JSON 解析失败，回退到文本
+
+        // 尝试解析为JSON
         try {
-          const txt = await response.text();
-          parsed = this.tryParseJSON(txt) ?? (txt ? { message: txt } : {});
-        } catch (textError) {
-          throw new Error(`响应解析失败: JSON错误=${jsonError}, 文本错误=${textError}`);
+          parsed = JSON.parse(txt);
+          console.log('📥 成功解析为JSON:', parsed);
+        } catch {
+          // 如果不是JSON，直接作为文本处理
+          console.log('📥 响应不是JSON格式，作为文本处理');
+          parsed = { message: txt };
         }
+      } catch (textError) {
+        console.error('📥 响应读取失败:', textError);
+        throw new Error(`响应读取失败: ${textError}`);
       }
 
       // 兼容 {analysis: ...} 或 data.analysis
@@ -197,6 +269,7 @@ export class N8nService {
       throw new Error('n8n工作流返回空响应');
     }
 
+    // 处理直接返回的文本内容
     if (typeof data === 'string') {
       return { success: true, data: { message: data } };
     }
@@ -214,11 +287,32 @@ export class N8nService {
     // 标准格式
     if (obj.data && typeof obj.data === 'object' && obj.data !== null) {
       const dataObj = obj.data as Record<string, unknown>;
-      if (!dataObj.message) throw new Error('响应中缺少消息内容');
+      let messageInData = dataObj.message as string | undefined;
+
+      // 兼容更多键位
+      if (!messageInData) {
+        const maybe =
+          (dataObj.output as string) ??
+          (dataObj.text as string) ??
+          (dataObj.response as string) ??
+          (dataObj.reply as string) ??
+          (dataObj.answer as string) ??
+          // deepseek/openai style
+          ((dataObj.choices as { message?: { content?: string } }[] | undefined)?.[0]?.message?.content as string) ??
+          (dataObj.analysis as string);
+        if (typeof maybe === 'string' && maybe.trim().length > 0) {
+          messageInData = maybe;
+        }
+      }
+
+      if (!messageInData || messageInData.trim().length === 0) {
+        throw new Error('未返回有效响应');
+      }
+
       return {
         success: true,
         data: {
-          message: dataObj.message as string,
+          message: messageInData,
           confidence: dataObj.confidence as number | undefined,
           suggestions: dataObj.suggestions as string[] | undefined,
           relatedPoems: dataObj.relatedPoems as RelatedPoem[] | undefined
@@ -236,16 +330,26 @@ export class N8nService {
       };
     }
 
-    // 兜底键名
+    // 兜底键名 - 优先检查 output 字段
     const possible =
+      (obj.output as string) ??
       (obj.text as string) ??
       (obj.content as string) ??
       (obj.reply as string) ??
       (obj.answer as string) ??
       (obj.response as string) ??
       (obj.analysis as string);
-    if (typeof possible === 'string') {
-      return { success: true, data: { message: possible } };
+    if (typeof possible === 'string' && possible.trim().length > 0) {
+      // 清理Markdown格式符号
+      const cleanMessage = possible
+        .replace(/\*\*\*/g, '') // 移除 ***
+        .replace(/##/g, '') // 移除 ##
+        .replace(/\*\*/g, '') // 移除 **
+        .replace(/\*/g, '') // 移除 *
+        .replace(/#/g, '') // 移除 #
+        .trim();
+
+      return { success: true, data: { message: cleanMessage } };
     }
 
     throw new Error('n8n工作流未返回有效响应，请检查工作流配置');

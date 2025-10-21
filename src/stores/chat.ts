@@ -47,24 +47,13 @@ export const useChatStore = defineStore('chat', () => {
     error.value = null;
 
     try {
-      // 构建请求数据
-      const requestData: ChatRequest = {
-        message: userMessage,
-        timestamp: new Date().toISOString(),
-        context: {
-          platform: 'poetry-app',
-          version: '1.0.0'
-        }
-      };
-
-      console.log('🚀 发送请求到n8n工作流:', {
+      // 使用 x-www-form-urlencoded 形式发送，参数名为 chatInput
+      console.log('🚀 发送请求到n8n工作流(form-urlencoded):', {
         webhookUrl: n8nConfig.value.webhookUrl,
-        message: userMessage,
-        requestData
+        chatInput: userMessage
       });
 
-      // 使用n8n服务发送请求（完全依赖远程工作流）
-      const response: ChatResponse = await n8nService.sendMessage(requestData);
+      const response: ChatResponse = await n8nService.sendFormText(userMessage);
 
       console.log('📥 收到n8n工作流响应:', response);
 
@@ -78,23 +67,25 @@ export const useChatStore = defineStore('chat', () => {
     } catch (err) {
       console.error('❌ n8n工作流请求失败:', err);
 
-      // 提供更详细的错误信息（完全依赖n8n工作流）
-      let errorMessage = 'n8n工作流服务暂时不可用，请稍后重试。';
-      if (err instanceof Error) {
-        if (err.message.includes('超时')) {
-          errorMessage = 'n8n工作流请求超时，请检查网络连接或稍后重试。';
-        } else if (err.message.includes('网络连接失败')) {
-          errorMessage = '网络连接失败，请检查网络设置。';
-        } else if (err.message.includes('CORS')) {
-          errorMessage = '跨域请求被阻止，请联系技术支持。';
-        } else if (err.message.includes('工作流配置')) {
-          errorMessage = 'n8n工作流配置问题，请确保工作流已正确设置并能够响应请求。';
-        } else if (err.message.includes('未返回有效响应')) {
-          errorMessage = 'n8n工作流未返回有效响应，请检查工作流是否正确配置并能够处理请求。';
-        } else {
-          errorMessage = `n8n工作流错误：${err.message}`;
-        }
-      }
+          // 提供更详细的错误信息（完全依赖n8n工作流）
+          let errorMessage = 'AI助手暂时无法处理您的请求，请稍后重试。';
+          if (err instanceof Error) {
+            if (err.message.includes('超时')) {
+              errorMessage = '请求超时，请检查网络连接或稍后重试。';
+            } else if (err.message.includes('网络连接失败')) {
+              errorMessage = '网络连接失败，请检查网络设置。';
+            } else if (err.message.includes('CORS')) {
+              errorMessage = '跨域请求被阻止，请联系技术支持。';
+            } else if (err.message.includes('工作流配置')) {
+              errorMessage = 'AI服务配置问题，请确保服务已正确设置。';
+            } else if (err.message.includes('未返回有效响应') || err.message.includes('返回空响应')) {
+              errorMessage = 'AI服务暂时不可用，请稍后重试。';
+            } else if (err.message.includes('n8n工作流')) {
+              errorMessage = `AI服务错误：${err.message}`;
+            } else {
+              errorMessage = `AI服务连接错误：${err.message}`;
+            }
+          }
 
       error.value = errorMessage;
       throw new Error(errorMessage);

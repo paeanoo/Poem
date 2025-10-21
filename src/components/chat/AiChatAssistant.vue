@@ -211,23 +211,23 @@ const sendMessage = async () => {
   } catch (error) {
     console.error('n8n工作流请求失败:', error);
 
-    // 提供更友好的错误信息（完全依赖n8n工作流）
-    let errorMessage = '抱歉，n8n工作流暂时无法处理您的请求。';
+    // 提供更友好的错误信息
+    let errorMessage = '抱歉，AI助手暂时无法处理您的请求。';
     if (error instanceof Error) {
       if (error.message.includes('超时')) {
-        errorMessage = 'n8n工作流请求超时，请检查网络连接或稍后重试。';
+        errorMessage = '请求超时，请检查网络连接或稍后重试。';
       } else if (error.message.includes('网络连接失败')) {
         errorMessage = '网络连接失败，请检查网络设置。';
       } else if (error.message.includes('CORS')) {
         errorMessage = '跨域请求被阻止，请联系技术支持。';
-      } else if (error.message.includes('工作流配置')) {
-        errorMessage = 'n8n工作流配置问题，请确保工作流已正确设置并能够响应请求。';
-      } else if (error.message.includes('未返回有效响应')) {
-        errorMessage = 'n8n工作流未返回有效响应，请检查工作流是否正确配置并能够处理请求。';
-      } else if (error.message.includes('n8n工作流')) {
-        errorMessage = `n8n工作流错误：${error.message}`;
+      } else if (error.message.includes('工作流配置') || error.message.includes('AI服务配置')) {
+        errorMessage = 'AI服务配置问题，请确保服务已正确设置。';
+      } else if (error.message.includes('未返回有效响应') || error.message.includes('返回空响应') || error.message.includes('AI服务暂时不可用')) {
+        errorMessage = 'AI服务暂时不可用，请稍后重试。';
+      } else if (error.message.includes('AI服务')) {
+        errorMessage = `AI服务错误：${error.message}`;
       } else {
-        errorMessage = `n8n工作流连接错误：${error.message}`;
+        errorMessage = `AI服务连接错误：${error.message}`;
       }
     }
 
@@ -236,6 +236,8 @@ const sendMessage = async () => {
       content: errorMessage,
       timestamp: new Date()
     });
+    // 同时在控制台打印最后一条后端原始响应，便于排查
+    console.warn('AI错误提示：', errorMessage);
   } finally {
     isLoading.value = false;
     await nextTick();
