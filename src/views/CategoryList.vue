@@ -30,7 +30,7 @@ const goDetail = (id: string) => {
       <div v-for="p in poems" :key="p.id" class="bg-white rounded-xl shadow p-5 cursor-pointer hover:shadow-md" @click="goDetail(p.id)">
         <h3 class="text-xl font-semibold mb-1">{{ p.title }}</h3>
         <p class="text-gray-600 mb-3">{{ p.author }} · {{ p.dynasty }}</p>
-        <p class="text-gray-700 line-clamp-2">{{ p.content.join('，') }}</p>
+        <p class="text-gray-700 line-clamp-2">{{ p.content.join('') }}</p>
       </div>
     </div>
   </div>

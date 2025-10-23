@@ -71,17 +71,17 @@ onMounted(async () => {
 const categories = ref([
   {
     name: "唐诗",
-    image: "/images/唐诗.png",
+    image: "/images/categories/tang-poetry.png",
     description: "唐代诗歌，中国诗歌的黄金时代"
   },
   {
     name: "宋词",
-    image: "/images/宋词.png",
+    image: "/images/categories/song-ci.png",
     description: "宋代词作，婉约与豪放并存"
   },
   {
     name: "元曲",
-    image: "/images/元曲.png",
+    image: "/images/categories/yuan-qu.png",
     description: "元代散曲和杂剧，通俗文学的代表"
   }
 ]);
