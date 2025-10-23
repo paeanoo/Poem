@@ -589,8 +589,36 @@ export async function fetchPoemsRemote(params?: SearchParams): Promise<Poem[]> {
 
 // 主要获取诗词数据的方法（优先使用数据库）
 export async function getPoems(params?: SearchParams): Promise<Poem[]> {
+  // 临时解决方案：部署环境强制使用本地数据
+  if (import.meta.env.PROD) {
+    console.warn('生产环境：使用本地备用数据')
+    const localData = await fetchLocal()
+
+    // 如果有搜索参数，进行本地过滤
+    if (params) {
+      let result = localData
+      if (params.keyword) {
+        const k = params.keyword.toLowerCase()
+        result = result.filter(p =>
+          p.title.toLowerCase().includes(k) ||
+          p.author.toLowerCase().includes(k) ||
+          p.content.some(l => l.toLowerCase().includes(k))
+        )
+      }
+      if (params.author) {
+        result = result.filter(p => p.author.toLowerCase().includes(params.author!.toLowerCase()))
+      }
+      if (params.dynasty) {
+        result = result.filter(p => p.dynasty === params.dynasty)
+      }
+      return result
+    }
+
+    return localData
+  }
+
   try {
-    // 优先从数据库获取
+    // 开发环境：优先从数据库获取
     return await fetchFromDatabase(params)
   } catch (dbError) {
     console.warn('数据库获取失败，尝试远程API:', dbError)
