@@ -8,11 +8,26 @@ const router = useRouter()
 const store = usePoemStore()
 
 const categoryName = computed(() => String(route.params.name || ''))
-const poems = computed(() => store.poems.filter(p => p.dynasty.startsWith(categoryName.value)))
+
+// 朝代名称映射函数
+const getDynastyFromCategory = (category: string): string => {
+  const dynastyMap: Record<string, string> = {
+    '唐诗': '唐',
+    '宋词': '宋',
+    '元曲': '元'
+  }
+  return dynastyMap[category] || category
+}
+
+const poems = computed(() => {
+  const targetDynasty = getDynastyFromCategory(categoryName.value)
+  return store.poems.filter(p => p.dynasty === targetDynasty)
+})
 
 onMounted(async () => {
   if (!store.poems.length) {
-    await store.fetchPoems({ dynasty: categoryName.value })
+    const targetDynasty = getDynastyFromCategory(categoryName.value)
+    await store.fetchPoems({ dynasty: targetDynasty })
   }
 })
 

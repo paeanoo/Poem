@@ -551,6 +551,27 @@ async function fetchLocal(): Promise<Poem[]> {
       tags: ['闲适', '人生', '哲理'],
       createdAt: new Date().toISOString().slice(0, 10),
       updatedAt: new Date().toISOString().slice(0, 10),
+    },
+    {
+      id: '27',
+      title: '窦娥冤·滚绣球',
+      author: '关汉卿',
+      dynasty: '元',
+      content: [
+        '有日月朝暮悬，有鬼神掌着生死权。',
+        '天地也！只合把清浊分辨，',
+        '可怎生糊突了盗跖、颜渊？',
+        '为善的受贫穷更命短，',
+        '造恶的享富贵又寿延。',
+        '天地也！做得个怕硬欺软，',
+        '却原来也这般顺水推船！',
+        '地也，你不分好歹何为地！',
+        '天也，你错勘贤愚枉做天！',
+        '哎，只落得两泪涟涟。'
+      ],
+      tags: ['窦娥冤', '关汉卿', '元曲', '悲剧'],
+      createdAt: new Date().toISOString().slice(0, 10),
+      updatedAt: new Date().toISOString().slice(0, 10),
     }
   ]
   return samplePoems
