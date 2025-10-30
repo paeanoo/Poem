@@ -2,13 +2,11 @@
 import { onMounted, computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { usePoemStore } from '@/stores/poem'
-import { useAuthStore } from '@/stores/auth'
 import PoemActions from '@/components/poem/PoemActions.vue'
 
 const route = useRoute()
 const router = useRouter()
 const store = usePoemStore()
-const auth = useAuthStore()
 
 const poemId = computed(() => String(route.params.id || ''))
 const poem = computed(() => store.poems.find(p => p.id === poemId.value) || store.currentPoem)
@@ -19,7 +17,8 @@ const activeTab = ref('content')
 const analysisLevel = ref<'basic' | 'advanced' | 'expert'>('basic')
 
 // 相关诗词
-const relatedPoems = ref<typeof poem.value[]>([])
+type PoemType = typeof poem.value
+const relatedPoems = ref<NonNullable<PoemType>[]>([])
 
 // 切换赏析级别
 const switchAnalysisLevel = async (level: 'basic' | 'advanced' | 'expert') => {
@@ -29,13 +28,14 @@ const switchAnalysisLevel = async (level: 'basic' | 'advanced' | 'expert') => {
 
 // 加载相关诗词
 const loadRelatedPoems = async () => {
-  if (!poem.value) return
+  const currentPoem = poem.value
+  if (!currentPoem) return
 
   try {
     const allPoems = await store.fetchPoems()
     // 基于作者和朝代推荐相关诗词
     relatedPoems.value = allPoems
-      .filter(p => p.id !== poem.value?.id && (p.author === poem.value?.author || p.dynasty === poem.value?.dynasty))
+      .filter(p => p.id !== currentPoem.id && (p.author === currentPoem.author || p.dynasty === currentPoem.dynasty))
       .slice(0, 4)
   } catch (error) {
     console.error('加载相关诗词失败:', error)
@@ -235,7 +235,7 @@ onMounted(async () => {
               v-for="relatedPoem in relatedPoems"
               :key="relatedPoem.id"
               class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
-              @click="$router.push({ name: 'poem-detail', params: { id: relatedPoem.id } })"
+              @click="router.push({ name: 'poem-detail', params: { id: relatedPoem.id } })"
             >
               <h4 class="font-semibold text-gray-800 mb-1">{{ relatedPoem.title }}</h4>
               <p class="text-sm text-gray-600 mb-2">{{ relatedPoem.author }} · {{ relatedPoem.dynasty }}</p>

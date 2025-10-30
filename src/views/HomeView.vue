@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { usePoemStore } from '@/stores/poem';
 import * as PoetryService from '@/services/poetry';
 import { handleAvatarError } from '@/utils/avatarUtils';
 import AiChatAssistant from '@/components/chat/AiChatAssistant.vue';

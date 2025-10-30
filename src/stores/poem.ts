@@ -24,7 +24,7 @@ export const usePoemStore = defineStore('poem', () => {
   })
 
   // 方法
-  const fetchPoems = async (params?: SearchParams) => {
+  const fetchPoems = async (params?: SearchParams): Promise<Poem[]> => {
     loading.value = true
     error.value = null
 
@@ -54,9 +54,11 @@ export const usePoemStore = defineStore('poem', () => {
 
       console.log('📚 最终诗词数量:', filteredPoems.length)
       poems.value = filteredPoems
+      return filteredPoems
     } catch (err) {
       console.error('❌ 获取诗词失败:', err)
       error.value = err instanceof Error ? err.message : '获取诗词失败'
+      return []
     } finally {
       loading.value = false
     }

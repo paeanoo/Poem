@@ -64,11 +64,13 @@ export const collections = {
 
   // 添加诗词到收藏
   async addToCollection(userId: string, poemId: string, poemData: Record<string, unknown>) {
+    // 将 poemId (string) 转换为 number，如果无法转换则使用 0
+    const poemIdNum = parseInt(poemId, 10) || 0
     const { data, error } = await supabase
       .from('user_collections')
       .insert({
         user_id: userId,
-        poem_id: poemId,
+        poem_id: poemIdNum,
         poem_data: poemData,
         created_at: new Date().toISOString()
       })
@@ -89,11 +91,12 @@ export const collections = {
 
   // 检查诗词是否已收藏
   async isPoemCollected(userId: string, poemId: string) {
+    const poemIdNum = parseInt(poemId, 10) || 0
     const { data, error } = await supabase
       .from('user_collections')
       .select('id')
       .eq('user_id', userId)
-      .eq('poem_id', poemId)
+      .eq('poem_id', poemIdNum)
       .single()
 
     return { isCollected: !!data, error }
@@ -104,11 +107,12 @@ export const collections = {
 export const likes = {
   // 点赞诗词
   async likePoem(userId: string, poemId: string) {
+    const poemIdNum = parseInt(poemId, 10) || 0
     const { data, error } = await supabase
       .from('poem_likes')
       .insert({
         user_id: userId,
-        poem_id: poemId,
+        poem_id: poemIdNum,
         created_at: new Date().toISOString()
       })
       .select()
@@ -118,22 +122,24 @@ export const likes = {
 
   // 取消点赞
   async unlikePoem(userId: string, poemId: string) {
+    const poemIdNum = parseInt(poemId, 10) || 0
     const { error } = await supabase
       .from('poem_likes')
       .delete()
       .eq('user_id', userId)
-      .eq('poem_id', poemId)
+      .eq('poem_id', poemIdNum)
 
     return { error }
   },
 
   // 检查是否已点赞
   async isPoemLiked(userId: string, poemId: string) {
+    const poemIdNum = parseInt(poemId, 10) || 0
     const { data, error } = await supabase
       .from('poem_likes')
       .select('id')
       .eq('user_id', userId)
-      .eq('poem_id', poemId)
+      .eq('poem_id', poemIdNum)
       .single()
 
     return { isLiked: !!data, error }
@@ -141,10 +147,11 @@ export const likes = {
 
   // 获取诗词点赞数
   async getPoemLikeCount(poemId: string) {
+    const poemIdNum = parseInt(poemId, 10) || 0
     const { count, error } = await supabase
       .from('poem_likes')
       .select('*', { count: 'exact', head: true })
-      .eq('poem_id', poemId)
+      .eq('poem_id', poemIdNum)
 
     return { count: count || 0, error }
   }
@@ -154,10 +161,11 @@ export const likes = {
 export const community = {
   // 获取社区评论
   async getPoemComments(poemId: string) {
+    const poemIdNum = parseInt(poemId, 10) || 0
     const { data, error } = await supabase
       .from('poem_comments')
       .select('*, user_profiles(username, avatar)')
-      .eq('poem_id', poemId)
+      .eq('poem_id', poemIdNum)
       .order('created_at', { ascending: false })
 
     return { data, error }
@@ -165,10 +173,11 @@ export const community = {
 
   // 添加评论
   async addComment(poemId: string, userId: string, content: string) {
+    const poemIdNum = parseInt(poemId, 10) || 0
     const { data, error } = await supabase
       .from('poem_comments')
       .insert({
-        poem_id: poemId,
+        poem_id: poemIdNum,
         user_id: userId,
         content,
         created_at: new Date().toISOString()

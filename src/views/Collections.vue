@@ -2,11 +2,9 @@
 import { onMounted, ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { usePoemStore } from '@/stores/poem'
 import { collections as svcCollections } from '@/services/supabase'
 
 const auth = useAuthStore()
-const store = usePoemStore()
 const router = useRouter()
 
 const loading = ref(false)

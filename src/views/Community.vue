@@ -3,7 +3,6 @@ import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { usePoemStore } from '@/stores/poem'
-import { community } from '@/services/supabase'
 import { handleAvatarError } from '@/utils/avatarUtils'
 
 const auth = useAuthStore()
@@ -12,8 +11,6 @@ const router = useRouter()
 
 // 社区状态
 const activeTab = ref('discussions')
-const loading = ref(false)
-const error = ref<string | null>(null)
 
 // 讨论话题
 const topics = ref([
@@ -120,11 +117,6 @@ const likeCreation = (creationId: string) => {
 const shareCreation = (creationId: string) => {
   // 实现分享功能
   console.log('分享创作:', creationId)
-}
-
-// 格式化时间
-const formatTime = (timeString: string) => {
-  return timeString
 }
 
 onMounted(async () => {

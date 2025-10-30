@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import { n8nService, type ChatRequest, type ChatResponse } from '@/services/n8n';
+import { n8nService, type ChatResponse } from '@/services/n8n';
 
 // 消息接口
 export interface ChatMessage {

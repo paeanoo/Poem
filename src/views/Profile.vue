@@ -1,13 +1,9 @@
 <script setup lang="ts" name="UserProfile">
-import { onMounted, ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { onMounted, ref } from 'vue'
 import { useAuthStore } from '@/stores/auth'
-import { usePoemStore } from '@/stores/poem'
 import { profiles, collections } from '@/services/supabase'
 
 const auth = useAuthStore()
-const store = usePoemStore()
-const router = useRouter()
 
 const loading = ref(false)
 const error = ref<string | null>(null)
@@ -15,11 +11,13 @@ const activeTab = ref('overview')
 
 // 用户资料
 const profile = ref<{
+  id?: string;
   username: string | null;
-  email: string | null;
+  email?: string | null;
   avatar: string | null;
   bio: string | null;
   created_at: string;
+  updated_at?: string;
 } | null>(null)
 
 // 学习统计
@@ -112,10 +110,6 @@ const editProfile = () => {
   console.log('编辑资料')
 }
 
-// 跳转到诗词详情
-const goToPoemDetail = (poemId: string) => {
-  router.push({ name: 'poem-detail', params: { id: poemId } })
-}
 
 // 发布创作
 const publishCreation = (creationId: string) => {
